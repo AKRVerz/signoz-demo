@@ -85,7 +85,7 @@ go run .
 
 ---
 
-## 3. Demo 4 Golden Signals (untuk screencast)
+## 3. Demo 4 Golden Signals 
 
 ### a. RPS (Requests Per Second)
 
@@ -174,64 +174,7 @@ Tips biar nilainya bagus:
 
 ---
 
-## 5. Alerting & Notifikasi (Bonus 10 poin — opsional)
-
-### Buat Alert Rule di SigNoz
-
-**Alerts → New Alert Rule**:
-
-| Alert | Kondisi contoh | Channel |
-|-------|----------------|---------|
-| High Error Rate | Error rate `payment-service` > 20% selama 5 menit | Telegram / Teams |
-| High Latency | p95 latency `payment-service` > 1000ms selama 5 menit | Telegram / Teams |
-
-### Integrasi Telegram
-
-1. Buat bot lewat **@BotFather**, simpan token
-2. Chat bot (klik Start), ambil chat ID dari `https://api.telegram.org/bot<TOKEN>/getUpdates`
-3. Di SigNoz: **Settings → Alert Channels → New** → pilih Telegram, isi token & chat ID
-
-### Integrasi Microsoft Teams
-
-Di SigNoz: **Settings → Alert Channels → New** → pilih Microsoft Teams →
-paste Incoming Webhook URL dari channel Teams kamu.
-
-### Trigger alert untuk video
-
-```bash
-curl -X POST "http://localhost:8082/config?latency_ms=0&error_rate=0.9"
-./load-generator.sh 5 60
-```
-
-Tunggu alert firing → rekam notifikasi masuk ke Telegram/Teams.
-
----
-
-## 6. Struktur Video Screencast (40 poin)
-
-Saran durasi 8–12 menit:
-
-1. **Intro (30 detik)** — perkenalan & tujuan
-2. **Arsitektur app (1–2 menit)** — checkout → payment, kenapa 2 service
-3. **Live demo RPS** — load generator + grafik SigNoz
-4. **Live demo Latency** — naikkan `latency_ms`, jelaskan p50 vs p95 vs p99
-5. **Live demo Error Rate** — naikkan `error_rate`, tunjukkan trace error
-6. **Distributed Tracing** — buka trace, jelaskan flame graph & bottleneck
-7. **Dashboard buatan sendiri** — jelaskan susunan panel
-8. **(Bonus) Alert trigger → notifikasi Telegram/Teams**
-9. **Closing** — ringkasan pembelajaran
-
-Checklist sebelum submit:
-
-- [ ] Link Git repo (sebut nama anggota kelompok jika ada)
-- [ ] Video menunjukkan app berjalan
-- [ ] Video menunjukkan dashboard Signoz buatan sendiri
-- [ ] Penjelasan lisan RPS, Latency, Error Rate, Distributed Tracing
-- [ ] (Bonus) Alert sampai notifikasi masuk
-
----
-
-## 7. Endpoint Simulator (`/config`)
+## 5. Endpoint Simulator (`/config`)
 
 Ubah perilaku `payment-service` tanpa restart:
 
@@ -250,40 +193,3 @@ curl -X POST "http://localhost:8082/config?latency_ms=500&error_rate=0.3"
 ```
 
 ---
-
-## 8. Push ke Git
-
-```bash
-cd signoz-demo
-git init
-git add .
-git commit -m "SigNoz APM demo: checkout-service + payment-service"
-git branch -M main
-git remote add origin <url_repo_kamu>
-git push -u origin main
-```
-
----
-
-## 9. Kode Penting yang Perlu Dipahami
-
-Sebelum rekam video, pastikan kamu paham:
-
-| File | Bagian | Kenapa penting |
-|------|--------|----------------|
-| `service-a/main.go` | `otelhttp.NewTransport` pada client HTTP | Meneruskan trace context ke service B |
-| `service-a/main.go` | `otelhttp.NewHandler` pada `/checkout` | Auto-instrumentasi incoming request |
-| `service-b/main.go` | `tracer.Start(..., "payment.process")` | Custom span untuk depth trace |
-| `service-b/main.go` | `chaosConfig` + `/config` | Simulator latency & error live |
-| Keduanya | `setupOTel` + OTLP exporter | Mengirim trace ke SigNoz |
-
----
-
-## Troubleshooting
-
-| Masalah | Solusi |
-|---------|--------|
-| Service tidak muncul di SigNoz | Cek `OTEL_EXPORTER_OTLP_ENDPOINT`, pastikan port 4318 reachable dari container |
-| Trace tidak distributed (hanya 1 service) | Pastikan `checkout-service` memakai `otelhttp.NewTransport` pada HTTP client |
-| Data lambat muncul | Tunggu 30–60 detik; refresh halaman Services |
-| Docker tidak bisa reach SigNoz lokal | Gunakan `host.docker.internal:4318` (sudah di-set di docker-compose) |
